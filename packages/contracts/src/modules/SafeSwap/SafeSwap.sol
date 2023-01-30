@@ -2,19 +2,31 @@
 pragma solidity ^0.8.13;
 
 import {IOneInch, IERC20} from './Interfaces.sol';
-import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
-contract SwapEvents {}
+import {SafeMath} from 'openzeppelin-contracts/utils/math/SafeMath.sol';
 
-contract SwapHelpers {
+contract SwapEvents {
+  event SwappedWith1Inch(
+    address tokenIn,
+    address tokenOut,
+    uint256 amountIn,
+    uint256 amountOut
+  );
+}
+
+contract SwapHelpers is SwapEvents {
   address oneInch = 0x1111111254EEB25477B68fb85Ed929f73A960582;
   address ethAddr = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
   function calculateSlippage(
-    uint256 decimals_,
+    uint256 decimalsIn_,
+    uint256 decimalsOut_,
     uint256 amount_,
     uint256 unitAmt_
-  ) external view returns (uint256 slippage_) {
-    uint256 inAmt_ = amount_ * 10**(18 - decimals_);
+  ) public view returns (uint256 slippage_) {
+    uint256 inWeiAmt_ = SafeMath.mul(amount_, 10**(18 - decimalsIn_));
+
+    uint256 slippage_ = SafeMath.add(SafeMath.mul(unitAmt_, inWeiAmt_), (10**18) / 2) / (10**18);
+    slippage_ = (decimalsOut_ / 10**(18 - decimalsOut_));
   }
 
   function swapWithOneInch(
@@ -25,9 +37,33 @@ contract SwapHelpers {
     bytes calldata callData_
   ) external payable returns (uint256 amtOut_) {
     //approve the token to be swapped to one inch contract
+    uint256 value_ = 0;
     if (tokenIn_ != ethAddr) {
       IERC20(tokenIn_).approve(oneInch, amtIn_);
+      value_ = amtIn_;
     }
+
+    //TODO: check for msg.sender, delegate call logic
+    uint256 initialBal_ = (tokenOut_) == ethAddr
+      ? msg.sender.balance
+      : IERC20(tokenOut_).balanceOf(msg.sender);
+
+    (bool success, ) = oneInch.call{value: value_}(callData_);
+    require(success, '1Inch-swap-failed');
+
+    uint256 finalBal_ = (tokenOut_) == ethAddr
+      ? msg.sender.balance
+      : IERC20(tokenOut_).balanceOf(msg.sender);
+    amtOut_ = SafeMath.sub(finalBal_, initialBal_);
+
+    uint256 slippage_ = calculateSlippage(
+      IERC20(tokenIn_).decimals(),
+      IERC20(tokenOut_).decimals(),
+      amtIn_,
+      unitAmt_
+    );
+    require(slippage_ <= amtOut_, 'high-slippage');
+    emit SwappedWith1Inch(tokenIn_, tokenOut_, amtIn_, amtOut_);
   }
 }
 
