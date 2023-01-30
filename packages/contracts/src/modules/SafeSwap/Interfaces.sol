@@ -29,3 +29,7 @@ interface IOneInch {
     payable
     returns (uint256 returnAmount);
 }
+
+interface IParaswap {
+    function getTokenTransferProxy() external view returns (address);
+}
