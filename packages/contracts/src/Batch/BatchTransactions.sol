@@ -6,21 +6,6 @@ contract batchTransaction {
   address[] public addresses;
   mapping(address => uint) public value;
 
-  function setMapping(address target, uint256 amount) public payable {
-    uint256 scaledAmount = amount * 10 ** 18;
-    value[target] = scaledAmount;
-    bool present;
-    for (uint256 i = 0; i < addresses.length; i++) {
-      if (addresses[i] == target) {
-        present = true;
-        break;
-      }
-    }
-    if (!present) {
-      addresses.push(target);
-    }
-  }
-
   function sendBatchedTransactions(
     address[] memory _address,
     bytes[] calldata _data
