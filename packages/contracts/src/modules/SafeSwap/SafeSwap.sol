@@ -260,7 +260,10 @@ contract SafeSwap is SwapHelpers {
       }
       if (success_) break;
     }
-    require(success_, 'swap-Aggregator-failed');
+    if (success_) {
+      IERC20(tokenOut_).transfer(msg.sender, amtOut_);
+    } else revert('swap-Aggregator-failed');
+    
     emit Swapped(tokenIn_, tokenOut_, amtIn_, amtOut_);
   }
 }
