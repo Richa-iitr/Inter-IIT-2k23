@@ -9,6 +9,23 @@ import { OnRpcRequestHandler } from '@metamask/snap-types';
 export const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
+export const stake = async (): Promise<boolean> => {
+  const result: any = await wallet.request({
+    method: 'snap_confirm',
+    params: [
+      {
+        prompt: 'Stake',
+        description: 'Stake your funds to Aave',
+        textAreaContent: `Stake 10% of funds to aave`,
+      },
+    ],
+  });
+  if (result === true) {
+    console.log('random');
+  }
+  return result;
+};
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
