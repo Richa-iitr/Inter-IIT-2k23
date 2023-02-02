@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+// GOERLI: 0x21341a8fcdC727784cF0166BE8204ccd8Eb60730
 contract BaseAccount {
   address public owner;
 
@@ -15,6 +16,8 @@ contract BaseAccount {
 
   mapping(address => Whitelist) whitelisted;
 
+  mapping(address => bool) auths;
+
   constructor() {
     owner = msg.sender;
   }
@@ -24,7 +27,13 @@ contract BaseAccount {
     _;
   }
 
+  modifier onlyAuth() {
+    require(auths[msg.sender] == true, 'sender-not-owner');
+    _;
+  }
+
   event OwnerUpdated(address new_);
+  event AuthsUpdated(address new_, bool enabled);
   event ModuleUpdated(address module_, bytes4 sig_);
   event ModuleAdded(address module_, bytes4 sig_);
 
@@ -33,6 +42,20 @@ contract BaseAccount {
     require(newOwner_ != owner, 'already-owner');
     owner = newOwner_;
     emit OwnerUpdated(newOwner_);
+  }
+
+  function setAuth(address newAuth_) external onlyOwner {
+    require(newAuth_ != address(0), 'null-auth');
+    require(auths[newAuth_] != true, 'already-auth');
+    auths[newAuth_] = true;
+    emit AuthsUpdated(newAuth_, true);
+  }
+
+  function removeAuth(address auth_) external onlyOwner {
+    require(auth_ != address(0), 'null-auth');
+    require(auths[auth_] == true, 'not-auth');
+    auths[auth_] = false;
+    emit AuthsUpdated(auth_, false);
   }
 
   function whitelistContracts(

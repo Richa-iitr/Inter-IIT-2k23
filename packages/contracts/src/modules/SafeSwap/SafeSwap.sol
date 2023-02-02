@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IParaswap, IERC20, IUniswapV2Factory, IUniswapV2Router02} from './Interfaces.sol';
 
+//GOERLI: 0x517F886127DF76E61640c7d6C9AFd515bf757220
 contract SwapEvents {
   event SwappedWith1Inch(
     address tokenIn,
@@ -295,7 +296,7 @@ contract SwapHelpers is SwapEvents {
 }
 
 // MEV resistant swap(aggregator).
-contract SafeSwaps is SwapHelpers {
+contract SafeSwap is SwapHelpers {
   /**
    *@dev performs safe swap in priority order of dex and passing to the next if swap in higher priority fails.
    *@param tokenIn_ the token swap performed from.
@@ -306,7 +307,7 @@ contract SafeSwaps is SwapHelpers {
    *@param dexs order of dexs for the swap on.
    */
   function swap(
-    Dex[] memory dexs,
+    uint256[] memory dexs,
     address tokenIn_,
     address tokenOut_,
     uint256 amtIn_,
@@ -325,7 +326,7 @@ contract SafeSwaps is SwapHelpers {
     }
 
     for (uint256 i = 0; i < dexs.length; ++i) {
-      Dex dex = dexs[i];
+      Dex dex = Dex(dexs[i]);
       if (dex == Dex.ONEINCH) {
         (amtOut_, success_) = swapWithOneInch(
           tokenIn_,
