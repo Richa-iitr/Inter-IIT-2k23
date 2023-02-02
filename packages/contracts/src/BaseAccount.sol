@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-// GOERLI: 0x21341a8fcdC727784cF0166BE8204ccd8Eb60730
+// GOERLI: 0x17422a75acdb9790e8c835ed12a30135c0503d2d
 contract BaseAccount {
   address public owner;
+  address public factory;
 
   //whitelisting addresses or contracts for certain actions
   struct Whitelist {
@@ -18,12 +19,21 @@ contract BaseAccount {
 
   mapping(address => bool) auths;
 
-  constructor() {
+  constructor(address factory_) {
     owner = msg.sender;
+    factory = factory_;
   }
 
   modifier onlyOwner() {
     require(msg.sender == owner, 'sender-not-owner');
+    _;
+  }
+
+  modifier onlyFactoryOrOwner() {
+    require(
+      msg.sender == owner || msg.sender == factory,
+      'sender-not-owner-or-factory'
+    );
     _;
   }
 
@@ -87,7 +97,10 @@ contract BaseAccount {
     require(success, 'call-failed');
   }
 
-  function addModule(bytes4[] memory sig_, address module_) external onlyOwner {
+  function addModule(bytes4[] memory sig_, address module_)
+    external
+    onlyFactoryOrOwner
+  {
     require(module_ != address(0), 'invalid-module');
 
     uint256 len_ = sig_.length;
