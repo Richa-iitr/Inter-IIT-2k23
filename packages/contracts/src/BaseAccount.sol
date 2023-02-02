@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
+// 0x439B4DB2db436141fd0F415b7e81558c1EFD8cB5
 contract BaseAccount {
   address public owner;
+  address public factory;
 
   //whitelisting addresses or contracts for certain actions
   struct Whitelist {
@@ -15,12 +17,21 @@ contract BaseAccount {
 
   mapping(address => Whitelist) whitelisted;
 
-  constructor() {
+  constructor(address factory_) {
     owner = msg.sender;
+    factory = factory_;
   }
 
   modifier onlyOwner() {
-    require(msg.sender == owner, "sender-not-owner");
+    require(msg.sender == owner, 'sender-not-owner');
+    _;
+  }
+
+  modifier ownerOrFactory() {
+    require(
+      msg.sender == owner || msg.sender == factory,
+      'sender-not-owner-or-factory'
+    );
     _;
   }
 
@@ -29,8 +40,8 @@ contract BaseAccount {
   event ModuleAdded(address module_, bytes4 sig_);
 
   function setOwner(address newOwner_) external onlyOwner {
-    require(newOwner_ != address(0), "null-owner");
-    require(newOwner_ != owner, "already-owner");
+    require(newOwner_ != address(0), 'null-owner');
+    require(newOwner_ != owner, 'already-owner');
     owner = newOwner_;
     emit OwnerUpdated(newOwner_);
   }
@@ -42,7 +53,7 @@ contract BaseAccount {
     uint256 length_ = contracts_.length;
     uint256 i = 0;
 
-    require(length_ == durations_.length, "invalid-length");
+    require(length_ == durations_.length, 'invalid-length');
 
     for (; i < length_; ++i) {
       address contract_ = contracts_[i];
@@ -56,7 +67,7 @@ contract BaseAccount {
   }
 
   function addModule(bytes4[] memory sig_, address module_) external onlyOwner {
-    require(module_ != address(0), "invalid-module");
+    require(module_ != address(0), 'invalid-module');
 
     uint256 len_ = sig_.length;
     for (uint256 i = 0; i < len_; ++i) {
@@ -66,8 +77,8 @@ contract BaseAccount {
   }
 
   function updateModule(bytes4 sig_, address module_) external onlyOwner {
-    require(module_ != address(0), "invalid-module");
-    require(enabledModules[sig_] != module_, "already-enabled");
+    require(module_ != address(0), 'invalid-module');
+    require(enabledModules[sig_] != module_, 'already-enabled');
 
     enabledModules[sig_] = module_;
     emit ModuleUpdated(module_, sig_);
@@ -79,12 +90,12 @@ contract BaseAccount {
 
   fallback() external payable {
     address module_ = getModule(msg.sig);
-    require(module_ != address(0), "no-module-found");
+    require(module_ != address(0), 'no-module-found');
     assembly {
       // Copy msg.data. We take full control of memory in this inline assembly
       // block because it will not return to Solidity code. We overwrite the
       // Solidity scratch pad at memory position 0.
-      // copy calldata(tx data) to memory: copy entire data at start of memory(0 offset at 0th position) 
+      // copy calldata(tx data) to memory: copy entire data at start of memory(0 offset at 0th position)
       calldatacopy(0, 0, calldatasize())
 
       // Call the implementation. Forward the data to the module.
