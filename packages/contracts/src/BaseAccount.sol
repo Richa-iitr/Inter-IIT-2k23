@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-// 0x439B4DB2db436141fd0F415b7e81558c1EFD8cB5
+// GOERLI: 0x758abf70a15ad8c3de161393c8144534a3851d57
 contract BaseAccount {
   address public owner;
   address public factory;
+  bool initialized;
 
   //whitelisting addresses or contracts for certain actions
   struct Whitelist {
@@ -17,8 +18,11 @@ contract BaseAccount {
 
   mapping(address => Whitelist) whitelisted;
 
-  constructor(address factory_) {
-    owner = msg.sender;
+  mapping(address => bool) auths;
+
+  function initialize(address factory_, address owner_) public {
+    require(initialized == false, 'already-initialized');
+    owner = owner_;
     factory = factory_;
   }
 
@@ -27,7 +31,7 @@ contract BaseAccount {
     _;
   }
 
-  modifier ownerOrFactory() {
+  modifier onlyFactoryOrOwner() {
     require(
       msg.sender == owner || msg.sender == factory,
       'sender-not-owner-or-factory'
@@ -35,7 +39,21 @@ contract BaseAccount {
     _;
   }
 
+  modifier onlyAuth() {
+    require(auths[msg.sender] == true, 'sender-not-owner');
+    _;
+  }
+
+  modifier onlyAddAuth() {
+    require(
+      auths[msg.sender] == true || msg.sender == factory || msg.sender == owner,
+      'sender-not-owner'
+    );
+    _;
+  }
+
   event OwnerUpdated(address new_);
+  event AuthsUpdated(address new_, bool enabled);
   event ModuleUpdated(address module_, bytes4 sig_);
   event ModuleAdded(address module_, bytes4 sig_);
 
@@ -44,6 +62,20 @@ contract BaseAccount {
     require(newOwner_ != owner, 'already-owner');
     owner = newOwner_;
     emit OwnerUpdated(newOwner_);
+  }
+
+  function setAuth(address newAuth_) external onlyOwner {
+    require(newAuth_ != address(0), 'null-auth');
+    require(auths[newAuth_] != true, 'already-auth');
+    auths[newAuth_] = true;
+    emit AuthsUpdated(newAuth_, true);
+  }
+
+  function removeAuth(address auth_) external onlyOwner {
+    require(auth_ != address(0), 'null-auth');
+    require(auths[auth_] == true, 'not-auth');
+    auths[auth_] = false;
+    emit AuthsUpdated(auth_, false);
   }
 
   function whitelistContracts(
@@ -66,7 +98,19 @@ contract BaseAccount {
     }
   }
 
-  function addModule(bytes4[] memory sig_, address module_) external onlyOwner {
+  function _delegateCall(address to_, bytes calldata data_)
+    public
+    payable
+    returns (bool success)
+  {
+    (success, ) = to_.delegatecall(data_);
+    require(success, 'call-failed');
+  }
+
+  function addModule(bytes4[] memory sig_, address module_)
+    external
+    onlyAddAuth
+  {
     require(module_ != address(0), 'invalid-module');
 
     uint256 len_ = sig_.length;
