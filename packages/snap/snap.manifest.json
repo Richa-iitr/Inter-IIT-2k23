@@ -18,7 +18,18 @@
     }
   },
   "initialPermissions": {
-    "snap_confirm": {}
+    "snap_confirm": {},
+    "endowment:cronjob": {
+      "jobs": [
+        {
+          "expression": "* * * * *",
+          "request": {
+            "method": "cronjobMethod",
+            "params": ["cronjob_param"]
+          }
+        }
+      ]
+    }
   },
   "manifestVersion": "0.1"
 }
