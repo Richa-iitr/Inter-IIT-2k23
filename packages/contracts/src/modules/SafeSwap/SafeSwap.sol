@@ -96,7 +96,7 @@ contract SwapHelpers is SwapEvents {
     uint256 inWeiAmt_ = (amount_ * 10**(18 - decimalsIn_));
 
     slippage_ = ((unitAmt_ * inWeiAmt_) + (10**18) / 2) / (10**18);
-    slippage_ = (decimalsOut_ / 10**(18 - decimalsOut_));
+    slippage_ = (slippage_ / 10**(18 - decimalsOut_));
   }
 
   /**
