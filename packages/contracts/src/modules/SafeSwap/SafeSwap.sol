@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IParaswap, IERC20, IUniswapV2Factory, IUniswapV2Router02} from './Interfaces.sol';
 
-//GOERLI: 0x517F886127DF76E61640c7d6C9AFd515bf757220
+//GOERLI: 0x89012390386aD3337dDd6735B9EAe5e2FAACb21f
 contract SwapEvents {
   event SwappedWith1Inch(
     address tokenIn,
@@ -96,7 +96,7 @@ contract SwapHelpers is SwapEvents {
     uint256 inWeiAmt_ = (amount_ * 10**(18 - decimalsIn_));
 
     slippage_ = ((unitAmt_ * inWeiAmt_) + (10**18) / 2) / (10**18);
-    slippage_ = (decimalsOut_ / 10**(18 - decimalsOut_));
+    slippage_ = (slippage_ / 10**(18 - decimalsOut_));
   }
 
   /**
