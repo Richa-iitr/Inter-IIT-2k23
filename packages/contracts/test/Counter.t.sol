@@ -1,7 +1,3 @@
-// // SPDX-License-Identifier: UNLICENSED
-// pragma solidity ^0.8.13;
-
-<<<<<<< HEAD
 // import "forge-std/Test.sol";
 // import "../src/Counter.sol";
 
@@ -22,7 +18,7 @@
 //         counter.setNumber(x);
 //         assertEq(counter.number(), x);
 //     }
-=======
+
 // import 'forge-std/Test.sol';
 // import '../src/modules/SafeSwap/SafeSwap.sol';
 
@@ -101,5 +97,5 @@
 //       calldata_
 //     );
 //   }
->>>>>>> main
+
 // }
