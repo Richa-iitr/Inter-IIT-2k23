@@ -8,8 +8,12 @@ The call structure:
 ```
 EOA --> smart contract account --> search for function in contract --> if present execute the function on behalf of EOA.
                                                |
-                                        if not present, go to fallback 
+                                        if not present, go to fallback
                                         and check if implementation module
                                         exists, if yes make a delegatecall
                                         to the module, else revert.
 ```
+
+### To compile,
+
+` forge build`
