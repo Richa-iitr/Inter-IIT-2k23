@@ -1,82 +1,67 @@
-// // SPDX-License-Identifier: UNLICENSED
-// pragma solidity ^0.8.13;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
 
-// import 'forge-std/Test.sol';
-// import '../src/modules/SafeSwap/SafeSwap.sol';
+import 'forge-std/Test.sol';
+import '../src/modules/Batch/BatchTransactions.sol';
 
-// contract SwapTest is Test {
-//   SafeSwap public swap;
+interface Aave {
+  function deposit(
+    address asset,
+    uint256 amount,
+    address onBehalfOf,
+    uint16 referralCode
+  ) external;
+}
 
-//   function setUp() public {
-//     swap = new SafeSwap();
-//   }
+interface ERC20 {
+  function approve(address _spender, uint256 _value)
+    external
+    returns (bool success);
 
-//   function hexStrToBytes(string memory hex_str)  returns (bytes memory) {
-//     //Check hex string is valid
-//     if (
-//       bytes(hex_str)[0] != '0' ||
-//       bytes(hex_str)[1] != 'x' ||
-//       bytes(hex_str).length % 2 != 0 ||
-//       bytes(hex_str).length < 4
-//     ) {
-//       throw;
-//     }
+  function allowance(address _owner, address _spender)
+    external
+    view
+    returns (uint256 remaining);
+}
 
-//     bytes memory bytes_array = new bytes((bytes(hex_str).length - 2) / 2);
+contract BatchTest is Test {
+  BatchTransaction public batch;
 
-//     for (uint256 i = 2; i < bytes(hex_str).length; i += 2) {
-//       uint256 tetrad1 = 16;
-//       uint256 tetrad2 = 16;
+  function setUp() public {
+    batch = new BatchTransaction();
+  }
 
-//       //left digit
-//       if (uint256(bytes(hex_str)[i]) >= 48 && uint256(bytes(hex_str)[i]) <= 57)
-//         tetrad1 = uint256(bytes(hex_str)[i]) - 48;
+  function getApproveCalldata() public returns (bytes memory) {
+    return
+      abi.encodeWithSignature(
+        'approve(address,uint256)',
+        0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198,
+        1000000
+      );
+  }
 
-//       //right digit
-//       if (
-//         uint256(bytes(hex_str)[i + 1]) >= 48 &&
-//         uint256(bytes(hex_str)[i + 1]) <= 57
-//       ) tetrad2 = uint256(bytes(hex_str)[i + 1]) - 48;
+  function getSupplyCalldata() public returns (bytes memory) {
+    return
+      abi.encodeWithSignature(
+        'supply(address,uint256,address,uint16)',
+        0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198,
+        1000000
+      );
+  }
 
-//       //left A->F
-//       if (uint256(bytes(hex_str)[i]) >= 65 && uint256(bytes(hex_str)[i]) <= 70)
-//         tetrad1 = uint256(bytes(hex_str)[i]) - 65 + 10;
-
-//       //right A->F
-//       if (
-//         uint256(bytes(hex_str)[i + 1]) >= 65 &&
-//         uint256(bytes(hex_str)[i + 1]) <= 70
-//       ) tetrad2 = uint256(bytes(hex_str)[i + 1]) - 65 + 10;
-
-//       //left a->f
-//       if (uint256(bytes(hex_str)[i]) >= 97 && uint256(bytes(hex_str)[i]) <= 102)
-//         tetrad1 = uint256(bytes(hex_str)[i]) - 97 + 10;
-
-//       //right a->f
-//       if (
-//         uint256(bytes(hex_str)[i + 1]) >= 97 &&
-//         uint256(bytes(hex_str)[i + 1]) <= 102
-//       ) tetrad2 = uint256(bytes(hex_str)[i + 1]) - 97 + 10;
-
-//       //Check all symbols are allowed
-//       if (tetrad1 == 16 || tetrad2 == 16) revert('invalid');
-
-//       bytes_array[i / 2 - 1] = bytes1(16 * tetrad1 + tetrad2);
-//     }
-
-//     return bytes_array;
-//   }
-
-//   function testSwap() public {
-//     bytes
-//       memory calldata_ = "0x3598d8ab00000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000537f88150bce6515e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002bc02aaa39b223fe8d0a0e5c4f27ead9083c756cc20001f46b175474e89094c44da98b954eedeac495271d0f000000000000000000000000000000000000000000869584cd000000000000000000000000100000000000000000000000000000000000001100000000000000000000000000000000000000000000009dcd7acdb863d81b28";
-//     swap.swap(
-//       [SwapHelpers.Dex.ZEROX],
-//       0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
-//       0x73967c6a0904aA032C103b4104747E88c566B1A2,
-//       10000000000000000,
-//       15202693763,
-//       calldata_
-//     );
-//   }
-// }
+  function testbatchTransaction() public {
+    vm.prank(0xC3dcad3d65f72F9FE5E2D5203b5681bd8013370E);
+    bytes memory approve_ = getApproveCalldata();
+    address[] memory addr = new address[](1);
+    bytes[] memory bytes_ = new bytes[](1);
+    addr[0] = 0x65aFADD39029741B3b8f0756952C74678c9cEC93;
+    bytes_[0] = approve_;
+    batch.sendBatchedTransactions(addr, bytes_);
+    console.log(
+      ERC20(0x65aFADD39029741B3b8f0756952C74678c9cEC93).allowance(
+        0xC3dcad3d65f72F9FE5E2D5203b5681bd8013370E,
+        0x15C6b352c1F767Fa2d79625a40Ca4087Fab9a198
+      )
+    );
+  }
+}
