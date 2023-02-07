@@ -18,7 +18,6 @@ As represented from the above,
 the user's EOA first creates a contract wallet, the contract wallet is confirgured with some basic modules at the time of cloning which can be later modified also. Now whenever a call is made to the smart contract via the EOA, firstly the method is searched in the implementation of smart contract account itself and if found a call is made. If the function is not present in the smart contract implementation, the call goes to the `fallback` which then tries finding the suitable module corresponding to the function selector. If the module is found, a `delegatecall` is made to the module, otheriwse the call is reverted. Delegate call allows all actions to be performed on behalf of the user.
 
 ___
-<br>
 
 ### To compile,
 ```
