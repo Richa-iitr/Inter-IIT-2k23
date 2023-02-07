@@ -7,3 +7,6 @@ This contains the functionlity for the swap aggregator and MEV resistance. Unisw
 
 ### Batch Module
 This contains the logic for batching the transactions by making delegatecalls to the respective addresses with the calldata.
+
+### Helper Module
+Helper contracts for the modules and base implementations.
