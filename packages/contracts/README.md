@@ -15,5 +15,6 @@ EOA --> smart contract account --> search for function in contract --> if presen
 ```
 
 ### To compile,
-
-` forge build`
+```
+forge build
+```
